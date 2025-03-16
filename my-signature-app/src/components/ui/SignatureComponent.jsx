@@ -2,6 +2,14 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+
+// Add Dancing Script font
+const fontFamily = "'Dancing Script', cursive";
+const fontStylesheet = document.createElement('link');
+fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap';
+fontStylesheet.rel = 'stylesheet';
+document.head.appendChild(fontStylesheet);
 
 const SignatureComponent = () => {
   const canvasRef = useRef(null);
@@ -9,6 +17,7 @@ const SignatureComponent = () => {
   const [ctx, setCtx] = useState(null);
   const [signature, setSignature] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [typedName, setTypedName] = useState('');
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,11 +59,28 @@ const SignatureComponent = () => {
     }
   };
 
+  const renderTypedText = () => {
+    if (!typedName.trim()) return;
+    
+    const canvas = canvasRef.current;
+    const fontSize = 48; // Adjust this value to change text size
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.fillStyle = '#000000';
+    
+    // Center the text horizontally and vertically
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(typedName, canvas.width / 2, canvas.height / 2);
+    
+    setSignature(canvas.toDataURL());
+  };
+
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setSignature(null);
     setUploadedImage(null);
+    setTypedName('');
   };
 
   const handleImageUpload = (e) => {
@@ -98,6 +124,22 @@ const SignatureComponent = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          <div className="flex gap-2 items-center">
+            <Input
+              type="text"
+              placeholder="Type your name"
+              value={typedName}
+              onChange={(e) => setTypedName(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              onClick={renderTypedText}
+              variant="secondary"
+            >
+              Add Text
+            </Button>
+          </div>
+
           <div className="border rounded-lg p-4">
             <canvas
               ref={canvasRef}
