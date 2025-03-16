@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 // Add Dancing Script font
 const fontFamily = "'Dancing Script', cursive";
 const fontStylesheet = document.createElement('link');
-fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap';
+fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap';
 fontStylesheet.rel = 'stylesheet';
 document.head.appendChild(fontStylesheet);
 
@@ -18,8 +18,14 @@ const SignatureComponent = () => {
   const [signature, setSignature] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [typedName, setTypedName] = useState('');
+  const [isFontLoaded, setIsFontLoaded] = useState(false);
 
   useEffect(() => {
+    // Load the font before using it
+    document.fonts.load(`bold 48px "${fontFamily}"`).then(() => {
+      setIsFontLoaded(true);
+    });
+
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     
@@ -65,11 +71,15 @@ const SignatureComponent = () => {
   };
 
   const renderTypedText = () => {
-    if (!typedName.trim()) return;
+    if (!typedName.trim() || !isFontLoaded) return;
     
     const canvas = canvasRef.current;
-    const fontSize = 48; // Adjust this value to change text size
-    ctx.font = `${fontSize}px ${fontFamily}`;
+    // Clear canvas first
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const fontSize = 72; // Increased font size for better visibility
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
     ctx.fillStyle = '#000000';
     
     // Center the text horizontally and vertically
@@ -168,81 +178,89 @@ const SignatureComponent = () => {
   };
 
   return (
-    <Card className="w-full max-w-xl">
-      <CardHeader>
-        <CardTitle>Electronic Signature</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-2 items-center">
-            <Input
-              type="text"
-              placeholder="Type your name"
-              value={typedName}
-              onChange={(e) => setTypedName(e.target.value)}
-              className="flex-1"
-            />
-            <Button
-              onClick={renderTypedText}
-              variant="secondary"
-            >
-              Add Text
-            </Button>
-          </div>
-
-          <div className="border rounded-lg p-4">
-            <canvas
-              ref={canvasRef}
-              width={500}
-              height={200}
-              className="border border-gray-300 rounded-lg w-full cursor-crosshair"
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseOut={stopDrawing}
-              style={{ background: '#FFFFFF' }}
-            />
-          </div>
-          
-          <div className="flex gap-4">
-            <Button
-              onClick={clearCanvas}
-              variant="outline"
-              className="w-full"
-            >
-              Clear
-            </Button>
-            
-            <div className="relative w-full">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                id="signature-upload"
+    <div className="min-h-[80vh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-xl">
+        <CardHeader className="pb-0">
+          <CardTitle></CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="space-y-4">
+            <div className="flex gap-2 items-center">
+              <Input
+                type="text"
+                placeholder="Type your name"
+                value={typedName}
+                onChange={(e) => setTypedName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    renderTypedText();
+                  }
+                }}
+                className="flex-1"
               />
-              <label
-                htmlFor="signature-upload"
-                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 cursor-pointer"
+              <Button
+                onClick={renderTypedText}
+                variant="outline"
               >
-                <Upload className="h-4 w-4" />
-                Upload Signature
-              </label>
+                Add Text
+              </Button>
             </div>
 
-            <Button
-              onClick={saveSignature}
-              variant="secondary"
-              className="w-full"
-              disabled={!signature}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Save PNG
-            </Button>
+            <div className="border rounded-lg p-4">
+              <canvas
+                ref={canvasRef}
+                width={500}
+                height={200}
+                className="border border-gray-300 rounded-lg w-full cursor-crosshair"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseOut={stopDrawing}
+                style={{ background: '#FFFFFF' }}
+              />
+            </div>
+            
+            <div className="flex gap-4">
+              <Button
+                onClick={clearCanvas}
+                variant="outline"
+                className="w-full"
+              >
+                Clear
+              </Button>
+              
+              <div className="relative w-full">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="signature-upload"
+                />
+                <label
+                  htmlFor="signature-upload"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 border rounded-md bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </label>
+              </div>
+
+              <Button
+                onClick={saveSignature}
+                variant="outline"
+                className="w-full"
+                disabled={!signature}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Save
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
