@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,12 @@ const SignatureComponent = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // Set canvas to white background
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
     context.strokeStyle = '#000000';
     context.lineWidth = 2;
     context.lineCap = 'round';
@@ -77,7 +82,9 @@ const SignatureComponent = () => {
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear with white background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     setSignature(null);
     setUploadedImage(null);
     setTypedName('');
@@ -91,7 +98,9 @@ const SignatureComponent = () => {
         const img = new Image();
         img.onload = () => {
           const canvas = canvasRef.current;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Clear with white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
           
           // Calculate scaling to fit the image within canvas
           const scale = Math.min(
@@ -115,6 +124,47 @@ const SignatureComponent = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const saveSignature = () => {
+    if (!signature) return;
+
+    // Create a temporary canvas with higher DPI
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Use the same dimensions as the display canvas
+    const originalCanvas = canvasRef.current;
+    tempCanvas.width = originalCanvas.width;   // 500 pixels
+    tempCanvas.height = originalCanvas.height;  // 200 pixels
+    
+    // Set white background
+    tempCtx.fillStyle = '#FFFFFF';
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Draw the signature from the original canvas
+    tempCtx.drawImage(originalCanvas, 0, 0);
+    
+    // Convert to grayscale
+    const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const data = imageData.data;
+    
+    for (let i = 0; i < data.length; i += 4) {
+      // Convert to grayscale using luminance formula
+      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      data[i] = gray;     // R
+      data[i + 1] = gray; // G
+      data[i + 2] = gray; // B
+      data[i + 3] = 255;  // A - set to fully opaque
+    }
+    
+    tempCtx.putImageData(imageData, 0, 0);
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.download = 'signature.png';
+    link.href = tempCanvas.toDataURL('image/png');
+    link.click();
   };
 
   return (
@@ -150,6 +200,7 @@ const SignatureComponent = () => {
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseOut={stopDrawing}
+              style={{ background: '#FFFFFF' }}
             />
           </div>
           
@@ -178,6 +229,16 @@ const SignatureComponent = () => {
                 Upload Signature
               </label>
             </div>
+
+            <Button
+              onClick={saveSignature}
+              variant="secondary"
+              className="w-full"
+              disabled={!signature}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Save PNG
+            </Button>
           </div>
         </div>
       </CardContent>
