@@ -1,14 +1,15 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import SignaturePad from 'react-signature-canvas';
 
-// Add Dancing Script font
-const fontFamily = "'Dancing Script', cursive";
 const fontStylesheet = document.createElement('link');
-fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap';
+const fontFamily = "'Yellowtail', cursive";
+fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Yellowtail&display=swap';
+// const fontFamily = "'Dancing Script', cursive";
+//fontStylesheet.href = 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap';
 fontStylesheet.rel = 'stylesheet';
 document.head.appendChild(fontStylesheet);
 
@@ -37,18 +38,21 @@ const SignatureComponent = () => {
     if (sigPadRef.current) {
       const canvas = sigPadRef.current.getCanvas();
       const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
       
       // Clear canvas first
       sigPadRef.current.clear();
       
       const fontSize = 72;
-      ctx.font = `bold ${fontSize}px ${fontFamily}`;
+      ctx.font = `${fontSize}px ${fontFamily}`;
       ctx.fillStyle = '#000000';
       
       // Center the text
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(typedName, canvas.width / 2, canvas.height / 2);
+      const displayWidth = canvas.width / dpr;
+      const displayHeight = canvas.height / dpr;
+      ctx.fillText(typedName, displayWidth / 2, displayHeight / 2);
     }
   };
 
@@ -122,6 +126,40 @@ const SignatureComponent = () => {
     }
   };
 
+  useEffect(() => {
+    const resizeCanvas = () => {
+      if (sigPadRef.current) {
+        const canvas = sigPadRef.current.getCanvas();
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Set the canvas dimensions accounting for device pixel ratio
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        
+        const ctx = canvas.getContext("2d");
+        // Scale the context to account for the device pixel ratio
+        ctx.scale(dpr, dpr);
+        
+        // Set the CSS size
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        sigPadRef.current.clear();
+      }
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    // Small delay to ensure proper initialization
+    setTimeout(resizeCanvas, 100);
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+
   return (
     <div className="min-h-[20vh] flex items-center justify-center p-4 px-0 md:px-0">
       <Card className="w-full md:max-w-xl px-1 md:px-4">
@@ -158,10 +196,21 @@ const SignatureComponent = () => {
                 ref={sigPadRef}
                 onEnd={handleSignatureChange}
                 canvasProps={{
-                  width: 500,
-                  height: 200,
-                  className: "border border-gray-300 rounded-lg w-full h-auto",
-                  style: { background: '#FFFFFF' }
+                  className: "border border-gray-300 rounded-lg w-full",
+                  style: { 
+                    background: '#FFFFFF',
+                    touchAction: 'none',
+                    height: '200px',
+                    display: 'block' // Ensure proper display
+                  }
+                }}
+                options={{
+                  dotSize: 2,
+                  minWidth: 1,
+                  maxWidth: 3,
+                  throttle: 16,
+                  velocityFilterWeight: 0.7,
+                  penColor: 'black'
                 }}
               />
             </div>
