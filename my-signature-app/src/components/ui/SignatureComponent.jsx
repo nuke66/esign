@@ -40,10 +40,13 @@ const SignatureComponent = () => {
   }, []);
 
   const startDrawing = (e) => {
+    e.preventDefault(); // Prevent default behavior
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // Handle both mouse and touch events
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
     
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -51,12 +54,15 @@ const SignatureComponent = () => {
   };
 
   const draw = (e) => {
+    e.preventDefault(); // Prevent default behavior
     if (!isDrawing) return;
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // Handle both mouse and touch events
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
     
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -218,7 +224,10 @@ const SignatureComponent = () => {
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseOut={stopDrawing}
-                style={{ background: '#FFFFFF' }}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                style={{ background: '#FFFFFF', touchAction: 'none' }}
               />
             </div>
             
