@@ -178,12 +178,12 @@ const SignatureComponent = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <Card className="w-full max-w-xl">
+    <div className="min-h-[20vh] flex items-center justify-center p-4 px-0 md:px-0">
+      <Card className="w-full md:max-w-xl px-1 md:px-4">
         <CardHeader className="pb-0">
           <CardTitle></CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 px-0">
           <div className="space-y-4">
             <div className="flex gap-2 items-center">
               <Input
@@ -202,17 +202,18 @@ const SignatureComponent = () => {
               <Button
                 onClick={renderTypedText}
                 variant="outline"
+                className="whitespace-nowrap"
               >
                 Add Text
               </Button>
             </div>
 
-            <div className="border rounded-lg p-4">
+            <div className="border rounded-lg p-0">
               <canvas
                 ref={canvasRef}
                 width={500}
                 height={200}
-                className="border border-gray-300 rounded-lg w-full cursor-crosshair"
+                className="border border-gray-300 rounded-lg w-full h-auto cursor-crosshair"
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
@@ -221,16 +222,16 @@ const SignatureComponent = () => {
               />
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <Button
                 onClick={clearCanvas}
                 variant="outline"
-                className="w-full"
+                className="flex-1 h-10"
               >
                 Clear
               </Button>
               
-              <div className="relative w-full">
+              <div className="flex-1">
                 <input
                   type="file"
                   accept="image/*"
@@ -240,7 +241,7 @@ const SignatureComponent = () => {
                 />
                 <label
                   htmlFor="signature-upload"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2 border rounded-md bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                  className="flex h-10 items-center justify-center gap-2 w-full px-4 border rounded-md bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
                 >
                   <Upload className="h-4 w-4" />
                   Upload
@@ -250,7 +251,7 @@ const SignatureComponent = () => {
               <Button
                 onClick={saveSignature}
                 variant="outline"
-                className="w-full"
+                className="flex-1 h-10"
                 disabled={!signature}
               >
                 <Download className="h-4 w-4 mr-2" />
